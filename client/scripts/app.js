@@ -30,6 +30,22 @@ App.prototype.send = function(username, message){
 
 var app = new App();
 
+var rooms = {};
+
+var getRoomNames = function(arr) {
+  return _.uniq(_.map(arr.results, function(e) {
+    if (e.room){
+      return e.room;
+    } else if (e.roomname){
+      return e.roomname;
+    } else if (e.roomName){
+      return e.roomName;
+    } else {
+      return 'general';
+    }
+  }));
+};
+
 var escape = function(str){
   // Let's make a hash table for the characters we're escaping
   if(_.isString(str)){
@@ -41,7 +57,7 @@ var escape = function(str){
     '<': '&lt',
     '>': '&gt',
     '"': '&quot',
-    "'": '&apos',
+    "'": '&#39',
     '`': '&#96',
     ' ': '&nbsp',
     '!': '&#33',
@@ -72,6 +88,7 @@ var escape = function(str){
     return str;
   }
 }
+
 var fetch = function(){
   $.ajax({
     url: 'https://api.parse.com/1/classes/chatterbox',
@@ -82,7 +99,14 @@ var fetch = function(){
       // build out html elements, append to our index?
       _.each(data.results, function(message, index){
         $('.messages').append('<p>' + escape(message.username) + ': ' + escape(message.text) + '</p>');
-      })
+      });
+      var roomsArr = getRoomNames(data);
+      _.each(roomsArr, function(elem){
+        if (!rooms[elem]){
+        $('select').append('<option>' + escape(elem) + '</option>');
+        rooms[elem] = elem;
+        };
+      });
       console.dir(data);
     },
     error: function(data){
