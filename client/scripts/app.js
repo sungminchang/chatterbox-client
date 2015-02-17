@@ -7,19 +7,20 @@ App.prototype.init = function(){
 
 };
 
-App.prototype.send = function(object){
-
+App.prototype.send = function(username, message){
+  var obj = {
+    username: username,
+    text: message,
+    room: 'jail'
+  }
   $.ajax({
-    url: 'https://api.parse.com/1/classes/chatterbox',
+    url: 'https://api.parse.com/1/classes/chatterbox/',
     type: 'POST',
-    data: JSON.stringify(object),
+    data: JSON.stringify(obj),
     contentType: 'application/json',
     success: function(data){
-      // build out html elements, append to our index?
-      _.each(data.results, function(message, index){
-        $('.messages').append('<p>' + escape(message.username) + ': ' + escape(message.text) + '</p>');
-      })
-      console.dir(data);
+      console.log(data);
+      console.log('Chatterbox message sent!');
     },
     error: function(data){
       console.error('chatterbox: Failed to load message');
@@ -75,9 +76,9 @@ var fetch = function(){
   $.ajax({
     url: 'https://api.parse.com/1/classes/chatterbox',
     type: 'GET',
-    data: 'JSON',
+    data: {order: '-createdAt'}, //Can place object here
     contentType: 'application/json',
-    success: function(data){
+     success: function(data){
       // build out html elements, append to our index?
       _.each(data.results, function(message, index){
         $('.messages').append('<p>' + escape(message.username) + ': ' + escape(message.text) + '</p>');
@@ -102,10 +103,9 @@ $(document).ready(function(){
     var userName = $('.username').val();
     var message = $('.chatMessage').val();
 
-    var mobj = {username: userName,
-                message: message};
-
-    app.send(mobj);
+    // var mobj = {username: userName,
+    //             text: message};
+    app.send(userName, message);
 
   });
 });
