@@ -1,3 +1,4 @@
+
 var App = function(){
 };
 
@@ -6,11 +7,13 @@ App.prototype.init = function(){
 };
 
 App.prototype.send = function(username, message, roomname){
+  roomname = roomname || 'general';
   var obj = {
     username: username,
     text: message,
     roomname: roomname
-  }
+  };
+
   $.ajax({
     url: 'https://api.parse.com/1/classes/chatterbox/',
     type: 'POST',
@@ -130,6 +133,7 @@ var grabRoom = function() {
 
 var currentRoom;
 
+
 $(document).ready(function(){
 
 fetch();
@@ -149,10 +153,45 @@ $( "select" ).change(function () {
   });
 
   $('.post').on('click', function() {
-    var userName = $('.username').val();
-    var message = $('.chatMessage').val();
-    var roomname = currentRoom;
-    app.send(userName, message, roomname);
+  var userName = $('.username').val();
+  var message = $('.chatMessage').val();
+  var roomname = currentRoom;
+  app.send(userName, message);
+});
 
+  $('.createRoom').on('click', function() {
+    var room = prompt('Select your room\'s name');
+    if (rooms[room]) {
+      alert("A room with that name already exists");
+    } else {
+      var userName = $('.username').val();
+      var message = $('.chatMessage').val();
+      var roomname = room
+      var obj = {
+        username: userName,
+        text: message,
+        roomname: roomname
+      };
+
+
+      $.ajax({
+        url: 'https://api.parse.com/1/classes/chatterbox/',
+        type: 'POST',
+        data: JSON.stringify(obj),
+        contentType: 'application/json',
+        success: function(data){
+          console.log("successful post");
+          fetch(currentRoom);
+          console.log("executed fetch after post");
+        },
+        error: function(data){
+          console.error('chatterbox: Failed to load message');
+        }
+      });
+
+      }
+
+      app.send(userName, message, roomname);
+      fetch(roomname);
   });
 });
