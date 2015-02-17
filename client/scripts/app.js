@@ -7,9 +7,25 @@ App.prototype.init = function(){
 
 };
 
-App.prototype.send = function(){
+App.prototype.send = function(object){
 
-}
+  $.ajax({
+    url: 'https://api.parse.com/1/classes/chatterbox',
+    type: 'POST',
+    data: JSON.stringify(object),
+    contentType: 'application/json',
+    success: function(data){
+      // build out html elements, append to our index?
+      _.each(data.results, function(message, index){
+        $('.messages').append('<p>' + escape(message.username) + ': ' + escape(message.text) + '</p>');
+      })
+      console.dir(data);
+    },
+    error: function(data){
+      console.error('chatterbox: Failed to load message');
+    }
+  });
+};
 
 var app = new App();
 
@@ -81,4 +97,15 @@ $(document).ready(function(){
 
 
   fetch();
+
+  $('.post').on('click', function() {
+    var userName = $('.username').val();
+    var message = $('.chatMessage').val();
+
+    var mobj = {username: userName,
+                message: message};
+
+    app.send(mobj);
+
+  });
 });
