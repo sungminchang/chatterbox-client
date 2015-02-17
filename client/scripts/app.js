@@ -1,5 +1,3 @@
-// YOUR CODE HERE:
-
 var App = function(){
 };
 
@@ -7,11 +5,11 @@ App.prototype.init = function(){
 
 };
 
-App.prototype.send = function(username, message){
+App.prototype.send = function(username, message, roomname){
   var obj = {
     username: username,
     text: message,
-    room: 'jail'
+    roomname: roomname
   }
   $.ajax({
     url: 'https://api.parse.com/1/classes/chatterbox/',
@@ -32,6 +30,8 @@ var app = new App();
 
 var rooms = {};
 
+
+
 var getRoomNames = function(arr) {
   return _.uniq(_.map(arr.results, function(e) {
     if (e.room){
@@ -47,12 +47,8 @@ var getRoomNames = function(arr) {
 };
 
 var escape = function(str){
-  // Let's make a hash table for the characters we're escaping
   if(_.isString(str)){
   var hash = {
-    // This will contain key/value pairs
-    // Key = character we're escaping
-    // Value = what it should encode to
     '&': '&amp',
     '<': '&lt',
     '>': '&gt',
@@ -73,8 +69,6 @@ var escape = function(str){
     '[': '&#91',
     ']': '&#93'
   }
-  // Iterate over the string
-  //
   var results = '';
   var stringArr = str.split('');
   return _.map(stringArr, function(letter){
@@ -89,47 +83,76 @@ var escape = function(str){
   }
 }
 
-var fetch = function(){
+var fetch = function(roomName){
+  $('p').remove();
+  roomName = roomName || 'general'
+
   $.ajax({
     url: 'https://api.parse.com/1/classes/chatterbox',
     type: 'GET',
-    data: {order: '-createdAt'}, //Can place object here
+    data: {order: '-createdAt'},
     contentType: 'application/json',
      success: function(data){
-      // build out html elements, append to our index?
       _.each(data.results, function(message, index){
-        $('.messages').append('<p>' + escape(message.username) + ': ' + escape(message.text) + '</p>');
+        if (roomName === 'general'){
+          $('.messages').append('<p>' + escape(message.username) + ': ' + escape(message.text) + '</p>');
+        } else if (message.roomname === roomName){
+          $('.messages').append('<p>' + escape(message.username) + ': ' + escape(message.text) + '</p>');
+        } else {
+          return;
+        }
       });
+
       var roomsArr = getRoomNames(data);
+
       _.each(roomsArr, function(elem){
         if (!rooms[elem]){
         $('select').append('<option>' + escape(elem) + '</option>');
         rooms[elem] = elem;
         };
       });
+
       console.dir(data);
     },
     error: function(data){
       console.error('chatterbox: Failed to load message');
     }
   });
-}
+};
+
+var grabRoom = function() {
+    var str = "";
+    $( "select option:selected" ).each(function() {
+      str += $( this ).text() + " ";
+      return str;
+    });
+  };
+
+var currentRoom;
 
 $(document).ready(function(){
+
+fetch();
+
+$( "select" ).change(function () {
+    var str = "";
+    $( "select option:selected" ).each(function() {
+      str += $( this ).text();
+      currentRoom = str;
+      fetch(str);
+    });
+  })
+  .change();
+
   $('.refresh').on('click', function(){
-    fetch();
+    fetch(currentRoom);
   });
-
-
-  fetch();
 
   $('.post').on('click', function() {
     var userName = $('.username').val();
     var message = $('.chatMessage').val();
-
-    // var mobj = {username: userName,
-    //             text: message};
-    app.send(userName, message);
+    var roomname = currentRoom;
+    app.send(userName, message, roomname);
 
   });
 });
