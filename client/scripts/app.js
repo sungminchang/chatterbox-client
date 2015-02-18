@@ -104,6 +104,8 @@ var escape = function(str){
   }
 }
 
+// 'where={"roomName":"lobby", "createdAt":{"$gte": {"__type": "Date", "iso": "2015-01-21T18:02:52.249Z" }}}'
+
 App.prototype.fetch = function(roomName){
   $('p').remove();
   roomName = roomName || 'general'
@@ -111,7 +113,7 @@ App.prototype.fetch = function(roomName){
   $.ajax({
     url: 'https://api.parse.com/1/classes/chatterbox',
     type: 'GET',
-    data: {order: '-createdAt'},
+    data: {where: JSON.stringify({roomname:roomName, order: -'createdAt'})},
     contentType: 'application/json',
      success: function(data){
       _.each(data.results, function(message, index){
@@ -160,16 +162,22 @@ $(document).ready(function(){
     })
     .change();
 
-    $('.refresh').on('click', function(){
-      app.fetch(currentRoom);
-    });
-
-    $('.post').on('click', function() {
-    var userName = $('.username').val();
-    var message = $('.chatMessage').val();
-    var roomname = currentRoom;
-    app.send(userName, message);
+  //Listen for clicks on the refresh button
+  $('.refresh').on('click', function(){
+    app.fetch(currentRoom);
   });
+
+
+  //Listen for clicks on the posting button
+  $('.post').on('click', function() {
+  // var userName = $('.username').val();
+  var obj = {
+    username: window.location.search.substring(10),
+    text: $('.chatMessage').val(),
+    roomname: currentRoom
+  }
+  app.send(obj);
+});
 
   //Listen for the user to click on the "create room" button
   $('.createRoom').on('click', function() {
@@ -177,15 +185,12 @@ $(document).ready(function(){
     if (rooms[room]) {
       alert("A room with that name already exists");
     } else {
-      var userName = $('.username').val();
-      var message = $('.chatMessage').val();
-      var roomname = room
-      var obj = {
-        username: userName,
-        text: message,
-        roomname: roomname
-      };
-
+        currentRoom = room;
+        var obj = {
+          username: window.location.search.substring(10),
+          text: $('.chatMessage').val(),
+          roomname: currentRoom
+        };
       $.ajax({
         url: 'https://api.parse.com/1/classes/chatterbox/',
         type: 'POST',
