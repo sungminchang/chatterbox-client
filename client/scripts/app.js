@@ -84,13 +84,9 @@ App.prototype.addMessage = function(message) {
   app.boldIfFriend(message.username);
 };
 
-App.prototype.clearFriendsList = function() {
-  friends = {};
-};
-
 App.prototype.fetch = function(roomName){
   $('p').remove();
-  roomName = roomName || 'general'
+  roomName = roomName || 'general';
 
   $.ajax({
     url: 'https://api.parse.com/1/classes/chatterbox',
@@ -112,7 +108,10 @@ App.prototype.fetch = function(roomName){
 
       //Listen for the user to click on a username to add the person as a   friend
       $('a').on('click', function(event) {
-        var name = $(event.target).text();
+        console.log(event);
+        //Slice(0,-2) is necessary because the event.target.text() function brings out
+        //the entire text string found in the <a> element, which includes a ": ";
+        var name = $(event.target).text().slice(0,-2);
         if (!friends[name]){
           friends[name] = name;
         }
@@ -141,12 +140,12 @@ $(document).ready(function(){
 
   //Listen for dropdown menu selections
   $( "select" ).change(function () {
-      var str = "";
-      $( "select option:selected" ).each(function() {
-        str += $( this ).text();
-        currentRoom = str;
-        app.fetch(str);
-      });
+    var str = "";
+    $( "select option:selected" ).each(function() {
+      str += $( this ).text();
+      currentRoom = str;
+      app.fetch(str);
+    });
     })
     .change();
 
@@ -159,12 +158,12 @@ $(document).ready(function(){
   //Listen for clicks on the posting button
   $('.post').on('click', function() {
   // var userName = $('.username').val();
-  var obj = {
-    username: window.location.search.substring(10),
-    text: $('.chatMessage').val(),
-    roomname: $("select option:selected").text()
-  }
-  app.send(obj);
+    var obj = {
+      username: window.location.search.substring(10),
+      text: $('.chatMessage').val(),
+      roomname: $("select option:selected").text()
+    }
+    app.send(obj);
 });
 
   //Listen for the user to click on the "create room" button
