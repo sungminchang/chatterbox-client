@@ -14,7 +14,7 @@ App.prototype.send = function(obj){
     data: JSON.stringify(obj),
     contentType: 'application/json',
     success: function(data){
-      console.log(data);
+      console.log(obj);
       console.log('Chatterbox message sent!');
     },
     error: function(data){
@@ -113,11 +113,17 @@ App.prototype.fetch = function(roomName){
   $.ajax({
     url: 'https://api.parse.com/1/classes/chatterbox',
     type: 'GET',
-    data: {where: JSON.stringify({roomname:roomName, order: -'createdAt'})},
+    data: {order: '-createdAt'},
     contentType: 'application/json',
      success: function(data){
       _.each(data.results, function(message, index){
+        if (roomName === 'general') {
           $('.messages').append('<p>' + '<a href="#">' + escape(message.username) + '</a>' + ': ' + escape(message.text) + '</p>');
+        } else if (message.roomname === roomName) {
+          $('.messages').append('<p>' + '<a href="#">' + escape(message.username) + '</a>' + ': ' + escape(message.text) + '</p>');
+        } else {
+          return;
+        }
       });
 
       var roomsArr = getRoomNames(data);
@@ -182,27 +188,30 @@ $(document).ready(function(){
   //Listen for the user to click on the "create room" button
   $('.createRoom').on('click', function() {
     var room = prompt('Select your room\'s name');
+    console.log(room);
     if (rooms[room]) {
       alert("A room with that name already exists");
     } else {
-        currentRoom = room;
         var obj = {
           username: window.location.search.substring(10),
           text: $('.chatMessage').val(),
-          roomname: currentRoom
+          roomname: room
         };
-      $.ajax({
-        url: 'https://api.parse.com/1/classes/chatterbox/',
-        type: 'POST',
-        data: JSON.stringify(obj),
-        contentType: 'application/json',
-        success: function(data){
-          app.fetch(currentRoom);
-        },
-        error: function(data){
-          console.error('chatterbox: Failed to load message');
-        }
-      });
+        app.send(obj);
+        rooms[room] = room;
+        app.fetch(room);
+      // $.ajax({
+      //   url: 'https://api.parse.com/1/classes/chatterbox/',
+      //   type: 'POST',
+      //   data: JSON.stringify(obj),
+      //   contentType: 'application/json',
+      //   success: function(data){
+      //     app.fetch(currentRoom);
+      //   },
+      //   error: function(data){
+      //     console.error('chatterbox: Failed to load message');
+      //   }
+      // });
 
       }
 
