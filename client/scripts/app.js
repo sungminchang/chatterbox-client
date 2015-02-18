@@ -69,14 +69,25 @@ var getRoomNames = function(arr) {
 
 
 // 'where={"roomName":"lobby", "createdAt":{"$gte": {"__type": "Date", "iso": "2015-01-21T18:02:52.249Z" }}}'
-App.prototype.boldFriends = function(){
-  // $('a').each(function(index){
-  //   console.log($(this).text());
-  // })
-  $('p').each(function(index){
-    console.log($(this).text());
-  });
-}
+App.prototype.boldIfFriend = function(friend){
+  if (friends.hasOwnProperty(friend)) {
+    console.log("trying to make it bold sir");
+    $('.messages p:last').css('font-weight', 'bold');
+  }
+};
+
+App.prototype.addMessage = function(message) {
+  $('.messages').append('<p></p>');
+  $('.messages p:last').text(message.text);
+  $('.messages p:last').prepend('<a href="#"></a>');
+  $('.messages p:last a').text(message.username + ': ');
+  app.boldIfFriend(message.username);
+};
+
+App.prototype.clearFriendsList = function() {
+  friends = {};
+};
+
 App.prototype.fetch = function(roomName){
   $('p').remove();
   roomName = roomName || 'general'
@@ -90,15 +101,9 @@ App.prototype.fetch = function(roomName){
       _.each(data.results, function(message, index){
 
         if (message.roomname === roomName) {
-          $('.messages').append('<p></p>');
-          $('.messages p:last').text(message.text);
-          $('.messages p:last').prepend('<a href="#"></a>');
-          $('.messages p:last a').text(message.username + ': ');
-        } else if (message.roomname === 'general') {
-          $('.messages').append('<p></p>');
-          $('.messages p:last').text(message.text);
-          $('.messages p:last').prepend('<a href="#"></a>');
-          $('.messages p:last a').text(message.username + ': ');
+          app.addMessage(message);
+        } else if (roomName === 'general') {
+          app.addMessage(message);
         } else {
           return;
         }
