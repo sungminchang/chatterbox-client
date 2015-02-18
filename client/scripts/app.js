@@ -1,4 +1,4 @@
-
+//============== App Constructor and Methods =========//
 var App = function(){
 };
 
@@ -6,13 +6,7 @@ App.prototype.init = function(){
 
 };
 
-App.prototype.send = function(username, message, roomname){
-  roomname = roomname || 'general';
-  var obj = {
-    username: username,
-    text: message,
-    roomname: roomname
-  };
+App.prototype.send = function(obj){
 
   $.ajax({
     url: 'https://api.parse.com/1/classes/chatterbox/',
@@ -28,6 +22,30 @@ App.prototype.send = function(username, message, roomname){
     }
   });
 };
+
+App.prototype.clearMessages = function() {
+  $('#chats').children().remove();
+};
+
+
+//DO NOT USE THIS METHOD FOR ANYTHING ELSE BESIDES PASSING SPECRUNNER
+//Does not escape the input
+App.prototype.addMessage = function(message) {
+  $('#chats').append('<p>' + message.username + ": " +
+    message.text + '</p>');
+};
+
+App.prototype.addRoom = function(roomName) {
+  $('#roomSelect').append('<div>' + roomName + '</div>');
+};
+
+App.prototype.addFriend = function() {
+
+};
+
+//============= END App constructor and methods =========//
+
+
 
 var app = new App();
 
@@ -86,7 +104,7 @@ var escape = function(str){
   }
 }
 
-var fetch = function(roomName){
+App.prototype.fetch = function(roomName){
   $('p').remove();
   roomName = roomName || 'general'
 
@@ -97,13 +115,7 @@ var fetch = function(roomName){
     contentType: 'application/json',
      success: function(data){
       _.each(data.results, function(message, index){
-        if (roomName === 'general'){
           $('.messages').append('<p>' + escape(message.username) + ': ' + escape(message.text) + '</p>');
-        } else if (message.roomname === roomName){
-          $('.messages').append('<p>' + escape(message.username) + ': ' + escape(message.text) + '</p>');
-        } else {
-          return;
-        }
       });
 
       var roomsArr = getRoomNames(data);
@@ -136,20 +148,20 @@ var currentRoom;
 
 $(document).ready(function(){
 
-fetch();
+app.fetch();
 
 $( "select" ).change(function () {
     var str = "";
     $( "select option:selected" ).each(function() {
       str += $( this ).text();
       currentRoom = str;
-      fetch(str);
+      app.fetch(str);
     });
   })
   .change();
 
   $('.refresh').on('click', function(){
-    fetch(currentRoom);
+    app.fetch(currentRoom);
   });
 
   $('.post').on('click', function() {
@@ -181,7 +193,7 @@ $( "select" ).change(function () {
         contentType: 'application/json',
         success: function(data){
           console.log("successful post");
-          fetch(currentRoom);
+          app.fetch(currentRoom);
           console.log("executed fetch after post");
         },
         error: function(data){
@@ -192,6 +204,6 @@ $( "select" ).change(function () {
       }
 
       app.send(userName, message, roomname);
-      fetch(roomname);
+      app.fetch(roomname);
   });
 });
