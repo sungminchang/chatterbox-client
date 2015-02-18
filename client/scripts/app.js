@@ -46,12 +46,12 @@ App.prototype.addFriend = function() {
 //============= END App constructor and methods =========//
 
 
+var app, rooms, friends, currentRoom;
 
-var app = new App();
-
-var rooms = {};
-
-var friends = {};
+app = new App();
+rooms = {};
+friends = {};
+currentRoom
 
 var getRoomNames = function(arr) {
   return _.uniq(_.map(arr.results, function(e) {
@@ -67,42 +67,6 @@ var getRoomNames = function(arr) {
   }));
 };
 
-var escape = function(str){
-  if(_.isString(str)){
-  var hash = {
-    '&': '&amp',
-    '<': '&lt',
-    '>': '&gt',
-    '"': '&quot',
-    "'": '&#39',
-    '`': '&#96',
-    ' ': '&nbsp',
-    '!': '&#33',
-    '@': '&#64',
-    '$': '&#36',
-    '%': '&#37',
-    '(': '&#40',
-    ')': '&#41',
-    '=': '&#61',
-    '+': '&#35',
-    '{': '&#123',
-    '}': '&#125',
-    '[': '&#91',
-    ']': '&#93'
-  }
-  var results = '';
-  var stringArr = str.split('');
-  return _.map(stringArr, function(letter){
-    if (hash[letter]){
-      return hash[letter];
-    } else {
-      return letter;
-    }
-  }).join('');
-  } else {
-    return str;
-  }
-}
 
 // 'where={"roomName":"lobby", "createdAt":{"$gte": {"__type": "Date", "iso": "2015-01-21T18:02:52.249Z" }}}'
 App.prototype.boldFriends = function(){
@@ -122,26 +86,23 @@ App.prototype.fetch = function(roomName){
     type: 'GET',
     data: {order: '-createdAt'},
     contentType: 'application/json',
-     success: function(data){
+    success: function(data){
       _.each(data.results, function(message, index){
-        var string = '<p>' + '<a href="#">' + escape(message.username) + '</a>' + ': ' + escape(message.text) + '</p>';
-        var strongString = '<strong><p>' + '<a href="#">' + escape(message.username) + '</a>' + ': ' + escape(message.text) + '</p></strong>';
 
-        if (roomName === 'general') {
-          if (friends.hasOwnProperty(message.username)){
-            $('.messages').append(strongString);
-          } else {
-            $('.messages').append(string);
-          }
-        } else if (message.roomname === roomName) {
-            if (friends.hasOwnProperty(message.username)){
-              $('.messages').append(strongString);
-            } else {
-              $('.messages').append(string);
-            }
+        if (message.roomname === roomName) {
+          $('.messages').append('<p></p>');
+          $('.messages p:last').text(message.text);
+          $('.messages p:last').prepend('<a href="#"></a>');
+          $('.messages p:last a').text(message.username + ': ');
+        } else if (message.roomname === 'general') {
+          $('.messages').append('<p></p>');
+          $('.messages p:last').text(message.text);
+          $('.messages p:last').prepend('<a href="#"></a>');
+          $('.messages p:last a').text(message.username + ': ');
         } else {
           return;
         }
+      
       });
 
       //Listen for the user to click on a username to add the person as a   friend
@@ -155,7 +116,8 @@ App.prototype.fetch = function(roomName){
 
       _.each(roomsArr, function(elem){
         if (!rooms[elem]){
-        $('select').append('<option>' + escape(elem) + '</option>');
+          $('select').append('<option></option>');
+          $('select option:last').text(elem);
         rooms[elem] = elem;
         };
       });
@@ -167,16 +129,6 @@ App.prototype.fetch = function(roomName){
     }
   });
 };
-
-var grabRoom = function() {
-    var str = "";
-    $( "select option:selected" ).each(function() {
-      str += $( this ).text() + " ";
-      return str;
-    });
-  };
-
-var currentRoom;
 
 $(document).ready(function(){
   //Initialize the page with messages
@@ -205,7 +157,7 @@ $(document).ready(function(){
   var obj = {
     username: window.location.search.substring(10),
     text: $('.chatMessage').val(),
-    roomname: currentRoom
+    roomname: $("select option:selected").text()
   }
   app.send(obj);
 });
@@ -214,7 +166,7 @@ $(document).ready(function(){
   $('.createRoom').on('click', function() {
     var room = prompt('Select your room\'s name');
     console.log(room);
-    if (rooms[room]) {
+    if (rooms.hasOwnProperty(room)) {
       alert("A room with that name already exists");
     } else {
         var obj = {
@@ -222,21 +174,19 @@ $(document).ready(function(){
           text: $('.chatMessage').val(),
           roomname: room
         };
-        app.send(obj);
-        rooms[room] = room;
-        app.fetch(room);
-      // $.ajax({
-      //   url: 'https://api.parse.com/1/classes/chatterbox/',
-      //   type: 'POST',
-      //   data: JSON.stringify(obj),
-      //   contentType: 'application/json',
-      //   success: function(data){
-      //     app.fetch(currentRoom);
-      //   },
-      //   error: function(data){
-      //     console.error('chatterbox: Failed to load message');
-      //   }
-      // });
+
+      $.ajax({
+        url: 'https://api.parse.com/1/classes/chatterbox/',
+        type: 'POST',
+        data: JSON.stringify(obj),
+        contentType: 'application/json',
+        success: function(data){
+          app.fetch(currentRoom);
+        },
+        error: function(data){
+          console.error('chatterbox: Failed to load message');
+        }
+      });
 
       }
 
