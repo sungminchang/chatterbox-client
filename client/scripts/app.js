@@ -51,7 +51,7 @@ var app = new App();
 
 var rooms = {};
 
-
+var friends = {};
 
 var getRoomNames = function(arr) {
   return _.uniq(_.map(arr.results, function(e) {
@@ -105,7 +105,14 @@ var escape = function(str){
 }
 
 // 'where={"roomName":"lobby", "createdAt":{"$gte": {"__type": "Date", "iso": "2015-01-21T18:02:52.249Z" }}}'
-
+App.prototype.boldFriends = function(){
+  // $('a').each(function(index){
+  //   console.log($(this).text());
+  // })
+  $('p').each(function(index){
+    console.log($(this).text());
+  });
+}
 App.prototype.fetch = function(roomName){
   $('p').remove();
   roomName = roomName || 'general'
@@ -117,15 +124,33 @@ App.prototype.fetch = function(roomName){
     contentType: 'application/json',
      success: function(data){
       _.each(data.results, function(message, index){
+        var string = '<p>' + '<a href="#">' + escape(message.username) + '</a>' + ': ' + escape(message.text) + '</p>';
+        var strongString = '<strong><p>' + '<a href="#">' + escape(message.username) + '</a>' + ': ' + escape(message.text) + '</p></strong>';
+
         if (roomName === 'general') {
-          $('.messages').append('<p>' + '<a href="#">' + escape(message.username) + '</a>' + ': ' + escape(message.text) + '</p>');
+          if (friends.hasOwnProperty(message.username)){
+            $('.messages').append(strongString);
+          } else {
+            $('.messages').append(string);
+          }
         } else if (message.roomname === roomName) {
-          $('.messages').append('<p>' + '<a href="#">' + escape(message.username) + '</a>' + ': ' + escape(message.text) + '</p>');
+            if (friends.hasOwnProperty(message.username)){
+              $('.messages').append(strongString);
+            } else {
+              $('.messages').append(string);
+            }
         } else {
           return;
         }
       });
 
+      //Listen for the user to click on a username to add the person as a   friend
+      $('a').on('click', function(event) {
+        var name = $(event.target).text();
+        if (!friends[name]){
+          friends[name] = name;
+        }
+      });
       var roomsArr = getRoomNames(data);
 
       _.each(roomsArr, function(elem){
@@ -217,11 +242,7 @@ $(document).ready(function(){
 
   });
 
-  //Listen for the user to click on a username to add the person as a   friend
-  $('a').on('click', function(event) {
-    console.log('hi');
-    console.log(event.text());
-  });
+
 
 
 
