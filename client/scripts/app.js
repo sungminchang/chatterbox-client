@@ -115,7 +115,7 @@ App.prototype.fetch = function(roomName){
     contentType: 'application/json',
      success: function(data){
       _.each(data.results, function(message, index){
-          $('.messages').append('<p>' + escape(message.username) + ': ' + escape(message.text) + '</p>');
+          $('.messages').append('<p>' + '<a href="#">' + escape(message.username) + '</a>' + ': ' + escape(message.text) + '</p>');
       });
 
       var roomsArr = getRoomNames(data);
@@ -145,32 +145,33 @@ var grabRoom = function() {
 
 var currentRoom;
 
-
 $(document).ready(function(){
+  //Initialize the page with messages
+    app.fetch();
 
-app.fetch();
+  //Listen for dropdown menu selections
+  $( "select" ).change(function () {
+      var str = "";
+      $( "select option:selected" ).each(function() {
+        str += $( this ).text();
+        currentRoom = str;
+        app.fetch(str);
+      });
+    })
+    .change();
 
-$( "select" ).change(function () {
-    var str = "";
-    $( "select option:selected" ).each(function() {
-      str += $( this ).text();
-      currentRoom = str;
-      app.fetch(str);
+    $('.refresh').on('click', function(){
+      app.fetch(currentRoom);
     });
-  })
-  .change();
 
-  $('.refresh').on('click', function(){
-    app.fetch(currentRoom);
+    $('.post').on('click', function() {
+    var userName = $('.username').val();
+    var message = $('.chatMessage').val();
+    var roomname = currentRoom;
+    app.send(userName, message);
   });
 
-  $('.post').on('click', function() {
-  var userName = $('.username').val();
-  var message = $('.chatMessage').val();
-  var roomname = currentRoom;
-  app.send(userName, message);
-});
-
+  //Listen for the user to click on the "create room" button
   $('.createRoom').on('click', function() {
     var room = prompt('Select your room\'s name');
     if (rooms[room]) {
@@ -185,16 +186,13 @@ $( "select" ).change(function () {
         roomname: roomname
       };
 
-
       $.ajax({
         url: 'https://api.parse.com/1/classes/chatterbox/',
         type: 'POST',
         data: JSON.stringify(obj),
         contentType: 'application/json',
         success: function(data){
-          console.log("successful post");
           app.fetch(currentRoom);
-          console.log("executed fetch after post");
         },
         error: function(data){
           console.error('chatterbox: Failed to load message');
@@ -203,7 +201,14 @@ $( "select" ).change(function () {
 
       }
 
-      app.send(userName, message, roomname);
-      app.fetch(roomname);
   });
+
+  //Listen for the user to click on a username to add the person as a   friend
+  $('a').on('click', function(event) {
+    console.log('hi');
+    console.log(event.text());
+  });
+
+
+
 });
